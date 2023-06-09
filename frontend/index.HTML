@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1 style="margin: 14px;">Attendance report</h1>
+
+    <div class="content">
+
+        <div class="add">
+            <input class="first-name-input" type="text" placeholder="First name">
+
+            <input class="last-name-input" type="text" placeholder="Last name">
+
+            <input class="birth-date-input" type="text" placeholder="Birth date">
+
+            <button class="btn-black" onclick="addStudent()">Add</button>
+        </div>
+        <div class="list">
+        </div>
+        <div class="filter">
+            <div>
+                <label>Minimum attendance</label>
+                <input class="filter-input" type="text" placeholder="0">
+            </div>
+
+            <button class="btn-black" onclick="getStudents()">Filter</button>
+        </div>
+    </div>
+
+
+
+
+    <script>
+        
+        let filterInput = document.querySelector('.filter-input');
+
+        let filterVar = 0
+
+        let list = document.querySelector('.list');
+
+        let firstNameInput = document.querySelector('.first-name-input');
+        let lastNameInput = document.querySelector('.last-name-input');
+        let birthDateInput = document.querySelector('.birth-date-input');
+
+        async function getStudents() {
+            list.innerHTML = '';
+            if (filterInput.value)
+                filterVar = filterInput.value
+            
+            await fetch(`http://127.0.0.1:8080/students?minAttendance=${filterVar}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                }
+            }).then(res => res.json()).then(data => {
+                console.log(data)
+                data.forEach(student => {
+                    let div = document.createElement('div')
+                    div.innerHTML = `
+                    <div class="student">
+                        <p>${student.first_name} ${student.last_name}</p>
+                        <p>Attendance: ${student.attendance}</p>
+                        <button class="btn-white" onclick=increaseAttendance(${student.id})>Increase</button>
+                        <button class="btn-white" onclick=removeStudent(${student.id})>Remove</button>
+                    </div>
+                    `
+
+                    list.appendChild(div)
+                })
+            })
+        }
+
+
+
+        async function addStudent() {
+            
+            await fetch(`http://127.0.0.1:8080/students`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: JSON.stringify(
+                    {
+                        "first_name": firstNameInput.value,
+                        "last_name": lastNameInput.value,
+                        "birth_date": birthDateInput.value
+                    }
+                )
+            }).then(res => res.json()).then(data => {
+                getStudents()
+                console.log(data)
+            })
+        }
+
+
+        async function removeStudent(id) {
+            await fetch(`http://127.0.0.1:8080/students`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: JSON.stringify(
+                    {
+                        "id": id
+                    }
+                )
+            }).then(res => res.json()).then(data => {
+                getStudents()
+                console.log(data)
+            })
+        }
+
+        async function increaseAttendance(id) {
+            await fetch(`http://127.0.0.1:8080/students`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: JSON.stringify(
+                    {
+                        "id": id
+                    }
+                )
+            }).then(res => res.json()).then(data => {
+                getStudents()
+                console.log(data)
+            })
+        }
+
+
+
+
+
+        getStudents()
+    </script>
+</body>
+
+
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,700&display=swap');
+    body {
+        font-family: 'Rubik', sans-serif;
+        background-color: rgb(250, 250, 250);  
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --bg-color: rgb(255, 252, 237);
+        --secondary-color: rgb(214, 237, 216);
+    }
+    
+    .content { 
+        padding: 15px;
+        display: flex;
+        gap: 50px;
+    }
+
+    .add {
+        border-radius: 5px;
+        border: 2px dashed black;
+        padding: 10px;
+        background-color: var(--bg-color);
+        width: 300px;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .add input {
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 7px;
+    }
+
+    .filter {
+        border-radius: 5px;
+        border: 2px dashed black;
+        padding: 10px;
+        background-color: var(--bg-color);
+        width: 300px;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .filter input {
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 7px;
+        width: 40px;
+    }
+
+    .list {
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .student {
+        border-radius: 5px;
+        padding: 10px;
+        width: 600px;
+        background-color: var(--secondary-color);
+        display: grid;
+        grid-template-columns: 4fr 3fr 1fr 1fr;
+        grid-gap: 10px;
+    }
+
+    .btn-white {
+        font-weight: bold;
+        border: 2px solid white;
+        padding: 4px;
+        background: none;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-black {
+        font-weight: bold;
+        border: 1px solid black;
+        padding: 4px;
+        background: none;
+        cursor: pointer;
+        color: black;
+    }
+
+</style>
+</html>
